@@ -1,12 +1,26 @@
-// src/app/page.tsx
+import { auth } from "@clerk/nextjs/server";
 import { getWebhooks } from "./actions";
+import ReplayButton from "@/components/ReplayButton";
 
-// Force dynamic rendering so we always see fresh data
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
-  const userId = "test-user-123"; // Hardcoded for MVP
+  const { userId } = auth();
+
+  if (!userId) {
+    return (
+      <main className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Welcome to HookSentinel</h1>
+          <p className="mt-4 text-gray-600">Please sign in to view your webhooks.</p>
+        </div>
+      </main>
+    );
+  }
+
   const webhooks = await getWebhooks(userId);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const webhookUrl = `${apiUrl}/inbox/${userId}`;
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -14,7 +28,7 @@ export default async function Dashboard() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">HookSentinel</h1>
           <div className="text-sm text-gray-500">
-            Inbox: <span className="font-mono bg-gray-200 px-2 py-1 rounded">/inbox/{userId}</span>
+            Inbox: <span className="font-mono bg-gray-200 px-2 py-1 rounded">{webhookUrl}</span>
           </div>
         </div>
 
@@ -51,6 +65,7 @@ export default async function Dashboard() {
                     <pre className="text-xs text-green-400 font-mono">
                       {JSON.stringify(JSON.parse(hook.payload), null, 2)}
                     </pre>
+                    <ReplayButton webhookId={hook.GSI1PK} />
                   </div>
                 </div>
               ))
