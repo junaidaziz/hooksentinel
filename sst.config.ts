@@ -1,12 +1,20 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./.sst/platform/config.d.ts" />
 
+import type { Region } from "@pulumi/aws";
 export default $config({
   app(input) {
+    const region = (process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-1") as Region;
     return {
       name: "hooksentinel",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
+      providers: {
+        aws: {
+          profile: process.env.AWS_PROFILE || "hooksentinel",
+          region,
+        },
+      },
     };
   },
   async run() {
@@ -43,6 +51,10 @@ export default $config({
     // 4. Next.js App: Your dashboard
     new sst.aws.Nextjs("Web", {
       link: [api, table, bucket],
+      dev: {
+        command: "pnpm dev:next",
+        url: "http://localhost:3000",
+      },
     });
 
     return {
