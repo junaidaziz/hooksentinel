@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "AWS_PROFILE=hooksentinel AWS_SDK_LOAD_CONFIG=1 AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1 sst dev",
+    "dev:next": "next dev",
     "lint": "eslint",
     "start": "next start"
   },
@@ -13,6 +14,7 @@
     "@aws-sdk/client-s3": "^3.983.0",
     "@aws-sdk/client-sqs": "^3.983.0",
     "@aws-sdk/lib-dynamodb": "^3.983.0",
+    "@clerk/nextjs": "^6.37.3",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
