@@ -2,10 +2,16 @@
 "use server";
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { fromIni } from "@aws-sdk/credential-providers";
 import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { Resource } from "sst";
 
-const client = new DynamoDBClient({});
+const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-1";
+const credentials = process.env.AWS_PROFILE
+  ? fromIni({ profile: process.env.AWS_PROFILE })
+  : undefined;
+
+const client = new DynamoDBClient({ region, credentials });
 const docClient = DynamoDBDocumentClient.from(client);
 
 export async function getWebhooks(userId: string) {
