@@ -29,3 +29,52 @@ export async function getWebhooks(userId: string) {
     return [];
   }
 }
+
+export async function replayWebhook(webhookId: string, targetUrl: string) {
+  if (!targetUrl) return { success: false, error: "No URL provided" };
+
+  try {
+    const query = new QueryCommand({
+      // @ts-ignore
+      TableName: Resource.Events.name,
+      IndexName: "GSI1", 
+      KeyConditionExpression: "GSI1PK = :id",
+      ExpressionAttributeValues: {
+        ":id": webhookId,
+      },
+    });
+
+    const result = await docClient.send(query);
+    const originalHook = result.Items?.[0];
+
+    if (!originalHook) return { success: false, error: "Webhook not found" };
+
+    // --- FIX START ---
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-HookSentinel-Replay": "true",
+      },
+      body: originalHook.payload,
+    });
+
+    if (!response.ok) {
+      return { 
+        success: false, 
+        error: `Target URL returned ${response.status} ${response.statusText}` 
+      };
+    }
+    // --- FIX END ---
+
+    return { 
+      success: true, 
+      status: response.status 
+    };
+
+  } catch (error: any) {
+    console.error("Replay failed:", error);
+    // Return the actual error message so we can debug
+    return { success: false, error: error.message || "Network error" };
+  }
+}
